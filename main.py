@@ -372,7 +372,7 @@ class App(customtkinter.CTk):
                     
                 #self.data_queue.put(('sonotec',self.moving_avg.add(self.decimal_response)))
                 
-                self.data_queue.put(('sonotec',abs(self.flow)))
+                self.data_queue.put(('sonotec',round(abs(self.flow)), 3))
 
     # updates the plot
     def update(self, data):
@@ -596,12 +596,18 @@ class App(customtkinter.CTk):
 
                     if self.reading!=False or self.reading!=None:
                         self.reading=int(self.readings[0])
+                        if self.reading > 16770000:
+                            self.reading = self.reading - 16770000
 
                     if self.reading2!=False or self.reading2!=None:
                         self.reading2=int(self.readings[1])
+                        if self.reading2 > 16770000:
+                            self.reading2 = self.reading2 - 16770000
             
                     if self.reading3!=False or self.reading3!=None:
                         self.reading3=int(self.readings[2])
+                        if self.reading3 > 16770000:
+                            self.reading3 = self.reading3 - 16770000
 
                     self.calibration_factor1=0-self.reading*self.hx_cal
                     self.calibration_factor2=0-self.reading2*self.hx2_cal
