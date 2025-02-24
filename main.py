@@ -372,7 +372,7 @@ class App(customtkinter.CTk):
                     
                 #self.data_queue.put(('sonotec',self.moving_avg.add(self.decimal_response)))
                 
-                self.data_queue.put(('sonotec',round(abs(self.flow)), 3))
+                self.data_queue.put(('sonotec',round(abs(self.flow), 3)))
 
     # updates the plot
     def update(self, data):
