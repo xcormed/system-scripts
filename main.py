@@ -356,7 +356,7 @@ class App(customtkinter.CTk):
                         #print(f"Flow: {moving_avg2.add(flow_value)} mL/min")
                         #print(f"Zero Adjust: {adjust_value}")
                         #print(f"Moving Average: {self.moving_avg.add((flow_value-120)/15.36)} mL/min")-
-                        self.data_buffer.append(flow_value/15.4)
+                        self.data_buffer.append(flow_value/14.88)
                         if(len(self.data_buffer)>self.buffer_length):
                             self.data_buffer.pop(0)
                         if(len(self.data_buffer)>0):
@@ -389,22 +389,23 @@ class App(customtkinter.CTk):
                     self.reading3=int(readings[2])
 
                     if (self.reading!=False or self.reading!=None):# and self.reading<16000000:
-                        if self.reading > 16770000:
-                            self.reading = self.reading - 16770000
+                        if self.reading > 16000000:
+                            self.reading = self.reading - 16000000
                         self.reading = self.reading*self.hx_cal+self.calibration_factor1
                         self.plotbuffer = np.append(self.plotbuffer, self.reading)
                         self.plotbuffer = self.plotbuffer[-500:]
 
                     if (self.reading2!=False or self.reading2!=None):# and self.reading2<16000000:
-                        if self.reading2 > 16770000:
-                            self.reading2 = self.reading2 - 16770000
+                        self.reading2=0 #temporary
+                        if self.reading2 > 16000000:
+                            self.reading2 = self.reading2 - 16000000
                         self.reading2 = self.reading2*self.hx2_cal+self.calibration_factor2
                         self.plotbuffer2 = np.append(self.plotbuffer2, self.reading2)
                         self.plotbuffer2 = self.plotbuffer2[-500:]
             
                     if (self.reading3!=False or self.reading3!=None):# and self.reading3<16000000:
-                        if self.reading3 > 16770000:
-                            self.reading3 = self.reading3 - 16770000
+                        if self.reading3 > 16000000:
+                            self.reading3 = self.reading3 - 16000000
                         self.reading3 = self.reading3*self.hx3_cal+self.calibration_factor3
                         self.plotbuffer3 = np.append(self.plotbuffer3, self.reading3)
                         self.plotbuffer3 = self.plotbuffer3[-500:]
@@ -596,18 +597,19 @@ class App(customtkinter.CTk):
 
                     if self.reading!=False or self.reading!=None:
                         self.reading=int(self.readings[0])
-                        if self.reading > 16770000:
-                            self.reading = self.reading - 16770000
+                        if self.reading > 16000000:
+                            self.reading = self.reading - 16000000
 
                     if self.reading2!=False or self.reading2!=None:
                         self.reading2=int(self.readings[1])
-                        if self.reading2 > 16770000:
-                            self.reading2 = self.reading2 - 16770000
+                        self.reading2=0 #temporary
+                        if self.reading2 > 16000000:
+                            self.reading2 = self.reading2 - 16000000
             
                     if self.reading3!=False or self.reading3!=None:
                         self.reading3=int(self.readings[2])
-                        if self.reading3 > 16770000:
-                            self.reading3 = self.reading3 - 16770000
+                        if self.reading3 > 16000000:
+                            self.reading3 = self.reading3 - 16000000
 
                     self.calibration_factor1=0-self.reading*self.hx_cal
                     self.calibration_factor2=0-self.reading2*self.hx2_cal
