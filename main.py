@@ -330,49 +330,57 @@ class App(customtkinter.CTk):
     def read_sonotec_data(self):
         while self.running:
             with self.flow_lock:
-                with Serial("COM7", 38400,bytesize=serial.EIGHTBITS,parity=serial.PARITY_EVEN,stopbits=serial.STOPBITS_ONE, timeout=1) as ser2: 
-                    # Send a request for data
-                    ser2.write(self.command)
-                    ser2.flush()
-                    # Wait for a response (sensor response times may vary; adjust if needed)
-                    time.sleep(0.2)
-                    self.response2=ser2.read(15)
-                    if len(self.response2) >= 5:
-                        # Validate CRC
-                        data = self.response2[:-2]
-                        received_crc = int.from_bytes(self.response2[-2:], byteorder='little')
-                        calculated_crc = self.calculate_crc(data)
-                        if received_crc != calculated_crc:
-                            raise ValueError("CRC mismatch - Data corrupted!")
-                        
-                        # Extract data bytes and decode flow
-                        data_bytes = self.response2[5:9]  # Adjust indices based on protocol
-                        flow_value = struct.unpack('>f', data_bytes)[0]  # Use '<f' if Little Endian
-                        
-                        # Apply noise threshold
-                        if abs(flow_value) < 1e-3:
-                            flow_value = 0.0
-                        
-                        #print(f"Flow: {moving_avg2.add(flow_value)} mL/min")
-                        #print(f"Zero Adjust: {adjust_value}")
-                        #print(f"Moving Average: {self.moving_avg.add((flow_value-120)/15.36)} mL/min")-
-                        self.data_buffer.append(flow_value/14.88)
-                        if(len(self.data_buffer)>self.buffer_length):
-                            self.data_buffer.pop(0)
-                        if(len(self.data_buffer)>0):
-                            self.flow = self.calculate_rms(self.data_buffer)
+                try:
+                    with Serial("COM7", 38400,bytesize=serial.EIGHTBITS,parity=serial.PARITY_EVEN,stopbits=serial.STOPBITS_ONE, timeout=1) as ser2: 
+                        # Send a request for data
+                        ser2.write(self.command)
+                        ser2.flush()
+                        # Wait for a response (sensor response times may vary; adjust if needed)
+                        time.sleep(0.2)
+                        self.response2=ser2.read(15)
+                        if len(self.response2) >= 5:
+                            # Validate CRC
+                            data = self.response2[:-2]
+                            received_crc = int.from_bytes(self.response2[-2:], byteorder='little')
+                            calculated_crc = self.calculate_crc(data)
+                            if received_crc != calculated_crc:
+                                raise ValueError("CRC mismatch - Data corrupted!")
+                            
+                            # Extract data bytes and decode flow
+                            data_bytes = self.response2[5:9]  # Adjust indices based on protocol
+                            flow_value = struct.unpack('>f', data_bytes)[0]  # Use '<f' if Little Endian
+                            
+                            # Apply noise threshold
+                            if abs(flow_value) < 1e-3:
+                                flow_value = 0.0
+                            
+                            #print(f"Flow: {moving_avg2.add(flow_value)} mL/min")
+                            #print(f"Zero Adjust: {adjust_value}")
+                            #print(f"Moving Average: {self.moving_avg.add((flow_value-120)/15.36)} mL/min")-
+                            self.data_buffer.append(flow_value/17.126)
+                            if(len(self.data_buffer)>self.buffer_length):
+                                self.data_buffer.pop(0)
+                            if(len(self.data_buffer)>0):
+                                self.flow = max(self.data_buffer)
+                            else:
+                                self.flow=0
+                                self.data_buffer.append(flow_value)
+                            #self.flow=round(self.moving_avg.add((abs(flow_value)-120)/15.05), 3) #add some code to make values like 8 zero 
                         else:
-                            self.flow=0
-                        #self.flow=round(self.moving_avg.add((abs(flow_value)-120)/15.05), 3) #add some code to make values like 8 zero 
-                    else:
-                        raise ValueError("Incomplete or no response received")
-                    #self.response = ser2.read(ser2.in_waiting or 1)  # Read all available bytes
-                    #self.hex_response = self.response.hex()[12:14]
-                    #self.decimal_response = int(self.hex_response, 16)
+                            raise ValueError("Incomplete or no response received")
+                        #self.response = ser2.read(ser2.in_waiting or 1)  # Read all available bytes
+                        #self.hex_response = self.response.hex()[12:14]
+                        #self.decimal_response = int(self.hex_response, 16)
+                        
+                        #self.data_queue.put(('sonotec',self.moving_avg.add(self.decimal_response)))
                     
-                #self.data_queue.put(('sonotec',self.moving_avg.add(self.decimal_response)))
-                
-                self.data_queue.put(('sonotec',round(abs(self.flow), 3)))
+                        self.data_queue.put(('sonotec',round(abs(self.flow), 3)))
+                except serial.SerialException as e:
+                    print(f"Connection failed: {e}")
+                    time.sleep(5)
+                except Exception as e:
+                    print(f"Unnexpected error: {e}")
+                    time.sleep(5)
 
     # updates the plot
     def update(self, data):
@@ -389,23 +397,23 @@ class App(customtkinter.CTk):
                     self.reading3=int(readings[2])
 
                     if (self.reading!=False or self.reading!=None):# and self.reading<16000000:
-                        if self.reading > 16000000:
-                            self.reading = self.reading - 16000000
+                        if self.reading > 16770000:
+                            self.reading = self.reading - 16770000
                         self.reading = self.reading*self.hx_cal+self.calibration_factor1
                         self.plotbuffer = np.append(self.plotbuffer, self.reading)
                         self.plotbuffer = self.plotbuffer[-500:]
 
                     if (self.reading2!=False or self.reading2!=None):# and self.reading2<16000000:
                         self.reading2=0 #temporary
-                        if self.reading2 > 16000000:
-                            self.reading2 = self.reading2 - 16000000
+                        if self.reading2 > 16770000:
+                            self.reading2 = self.reading2 - 16770000
                         self.reading2 = self.reading2*self.hx2_cal+self.calibration_factor2
                         self.plotbuffer2 = np.append(self.plotbuffer2, self.reading2)
                         self.plotbuffer2 = self.plotbuffer2[-500:]
             
                     if (self.reading3!=False or self.reading3!=None):# and self.reading3<16000000:
-                        if self.reading3 > 16000000:
-                            self.reading3 = self.reading3 - 16000000
+                        if self.reading3 > 16770000:
+                            self.reading3 = self.reading3 - 16770000
                         self.reading3 = self.reading3*self.hx3_cal+self.calibration_factor3
                         self.plotbuffer3 = np.append(self.plotbuffer3, self.reading3)
                         self.plotbuffer3 = self.plotbuffer3[-500:]
@@ -417,13 +425,13 @@ class App(customtkinter.CTk):
                         self.timeThen=time.time()
             
                     if self.timeNow>(self.timeFive+3):
-                        if self.reading<16000000:
+                        if self.reading<16770000:
                             self.pre_str = str(round(self.reading,2))
                             self.pre_val.set(self.pre_str + " mmHg")
-                        if self.reading2<16000000:
+                        if self.reading2<16770000:
                             self.mid_str = str(round(self.reading2,2))
                             self.mid_val.set(self.mid_str + " mmHg")
-                        if self.reading3<16000000:
+                        if self.reading3<16770000:
                             self.post_str = str(round(self.reading3,2))
                             self.post_val.set(self.post_str + " mmHg")
                         
